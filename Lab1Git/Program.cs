@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-class BankInfo
+public class BankInfo
 {
     public string Bank { get; set; }
     public double BuyRate { get; set; }
@@ -12,11 +12,34 @@ class BankInfo
     public double RateDifference => SellRate - BuyRate;
 }
 
+public class DataProcessor
+{
+    
+    public static double GetMaxRateDifference(List<BankInfo> banks)
+    {
+        if (banks == null || banks.Count == 0)
+            throw new ArgumentException("Список филиалов не должен быть пустым.");
+
+        double maxDifference = double.MinValue;
+
+        foreach (var bank in banks)
+        {
+            double difference = bank.SellRate - bank.BuyRate;
+            if (difference > maxDifference)
+            {
+                maxDifference = difference;
+            }
+        }
+
+        return maxDifference;
+    }
+}
+
 class Program
 {
     static void Main(string[] args)
     {
-        
+
         string filePath = "C:/Users/LEO/source/repos/Lab1Git/Data.txt";
 
         if (!File.Exists(filePath))
@@ -56,7 +79,8 @@ class Program
             Console.WriteLine("2. Вывести курсы валюты и адреса отделений банков, в которых продажа меньше 2.5.");
             Console.WriteLine("3. Сортировать данные по убыванию разницы между стоимостью продажи и покупки (Bubble sort).");
             Console.WriteLine("4. Сортировать данные по возрастанию названия банка и адреса отделения (Merge sort).");
-            Console.WriteLine("5. Выйти.");
+            Console.WriteLine("5. Вычислить максимальную разницу между покупкой и продажей валюты в одном филиале.");
+            Console.WriteLine("6. Выйти.");
             Console.Write("Выберите пункт: ");
             string choice = Console.ReadLine();
 
@@ -75,119 +99,123 @@ class Program
                     SortByBankAndAddressMerge(bankInfos);
                     break;
                 case "5":
+                    double maxDifference = DataProcessor.GetMaxRateDifference(bankInfos);
+                    Console.WriteLine($"\nМаксимальная разница между покупкой и продажей: {maxDifference:F2}");
+                    break;
+                case "6":
                     return;
                 default:
                     Console.WriteLine("Некорректный выбор. Попробуйте снова.");
                     break;
             }
         }
-    }
 
-    static void FilterByBank(List<BankInfo> banks, string targetBank)
-    {
-        var filtered = banks.Where(b => b.Bank.Equals(targetBank, StringComparison.OrdinalIgnoreCase)).ToList();
-        Console.WriteLine($"\nКурсы валют в отделениях банка «{targetBank}»:");
-        foreach (var bank in filtered)
+        static void FilterByBank(List<BankInfo> banks, string targetBank)
         {
-            Console.WriteLine($"Купить: {bank.BuyRate}, Продать: {bank.SellRate}, Адрес: {bank.Address}");
-        }
-        if (!filtered.Any())
-        {
-            Console.WriteLine("Данные отсутствуют.");
-        }
-    }
-
-    static void FilterBySellRate(List<BankInfo> banks, double maxSellRate)
-    {
-        var filtered = banks.Where(b => b.SellRate < maxSellRate).ToList();
-        Console.WriteLine($"\nОтделения банков, где продажа меньше {maxSellRate}:");
-        foreach (var bank in filtered)
-        {
-            Console.WriteLine($"Банк: {bank.Bank}, Купить: {bank.BuyRate}, Продать: {bank.SellRate}, Адрес: {bank.Address}");
-        }
-        if (!filtered.Any())
-        {
-            Console.WriteLine("Данные отсутствуют.");
-        }
-    }
-
-    static void SortByRateDifferenceBubble(List<BankInfo> banks)
-    {
-        for (int i = 0; i < banks.Count - 1; i++)
-        {
-            for (int j = 0; j < banks.Count - i - 1; j++)
+            var filtered = banks.Where(b => b.Bank.Equals(targetBank, StringComparison.OrdinalIgnoreCase)).ToList();
+            Console.WriteLine($"\nКурсы валют в отделениях банка «{targetBank}»:");
+            foreach (var bank in filtered)
             {
-                if (banks[j].RateDifference < banks[j + 1].RateDifference)
-                {
-                    var temp = banks[j];
-                    banks[j] = banks[j + 1];
-                    banks[j + 1] = temp;
-                }
+                Console.WriteLine($"Купить: {bank.BuyRate}, Продать: {bank.SellRate}, Адрес: {bank.Address}");
+            }
+            if (!filtered.Any())
+            {
+                Console.WriteLine("Данные отсутствуют.");
             }
         }
 
-        Console.WriteLine("\nДанные отсортированы по убыванию разницы между продажей и покупкой:");
-        foreach (var bank in banks)
+        static void FilterBySellRate(List<BankInfo> banks, double maxSellRate)
         {
-            Console.WriteLine($"Банк: {bank.Bank}, Разница: {bank.RateDifference:F2}, Адрес: {bank.Address}");
+            var filtered = banks.Where(b => b.SellRate < maxSellRate).ToList();
+            Console.WriteLine($"\nОтделения банков, где продажа меньше {maxSellRate}:");
+            foreach (var bank in filtered)
+            {
+                Console.WriteLine($"Банк: {bank.Bank}, Купить: {bank.BuyRate}, Продать: {bank.SellRate}, Адрес: {bank.Address}");
+            }
+            if (!filtered.Any())
+            {
+                Console.WriteLine("Данные отсутствуют.");
+            }
         }
-    }
 
-    static void SortByBankAndAddressMerge(List<BankInfo> banks)
-    {
-        banks = MergeSort(banks);
-
-        Console.WriteLine("\nДанные отсортированы по возрастанию названия банка и адреса:");
-        foreach (var bank in banks)
+        static void SortByRateDifferenceBubble(List<BankInfo> banks)
         {
-            Console.WriteLine($"Банк: {bank.Bank}, Адрес: {bank.Address}, Купить: {bank.BuyRate}, Продать: {bank.SellRate}");
+            for (int i = 0; i < banks.Count - 1; i++)
+            {
+                for (int j = 0; j < banks.Count - i - 1; j++)
+                {
+                    if (banks[j].RateDifference < banks[j + 1].RateDifference)
+                    {
+                        var temp = banks[j];
+                        banks[j] = banks[j + 1];
+                        banks[j + 1] = temp;
+                    }
+                }
+            }
+
+            Console.WriteLine("\nДанные отсортированы по убыванию разницы между продажей и покупкой:");
+            foreach (var bank in banks)
+            {
+                Console.WriteLine($"Банк: {bank.Bank}, Разница: {bank.RateDifference:F2}, Адрес: {bank.Address}");
+            }
         }
-    }
 
-    static List<BankInfo> MergeSort(List<BankInfo> banks)
-    {
-        if (banks.Count <= 1)
-            return banks;
-
-        int mid = banks.Count / 2;
-        var left = MergeSort(banks.GetRange(0, mid));
-        var right = MergeSort(banks.GetRange(mid, banks.Count - mid));
-
-        return Merge(left, right);
-    }
-
-    static List<BankInfo> Merge(List<BankInfo> left, List<BankInfo> right)
-    {
-        var result = new List<BankInfo>();
-        int i = 0, j = 0;
-
-        while (i < left.Count && j < right.Count)
+        static void SortByBankAndAddressMerge(List<BankInfo> banks)
         {
-            if (string.Compare(left[i].Bank, right[j].Bank) < 0 ||
-                (left[i].Bank == right[j].Bank && string.Compare(left[i].Address, right[j].Address) < 0))
+            banks = MergeSort(banks);
+
+            Console.WriteLine("\nДанные отсортированы по возрастанию названия банка и адреса:");
+            foreach (var bank in banks)
+            {
+                Console.WriteLine($"Банк: {bank.Bank}, Адрес: {bank.Address}, Купить: {bank.BuyRate}, Продать: {bank.SellRate}");
+            }
+        }
+
+        static List<BankInfo> MergeSort(List<BankInfo> banks)
+        {
+            if (banks.Count <= 1)
+                return banks;
+
+            int mid = banks.Count / 2;
+            var left = MergeSort(banks.GetRange(0, mid));
+            var right = MergeSort(banks.GetRange(mid, banks.Count - mid));
+
+            return Merge(left, right);
+        }
+
+        static List<BankInfo> Merge(List<BankInfo> left, List<BankInfo> right)
+        {
+            var result = new List<BankInfo>();
+            int i = 0, j = 0;
+
+            while (i < left.Count && j < right.Count)
+            {
+                if (string.Compare(left[i].Bank, right[j].Bank) < 0 ||
+                    (left[i].Bank == right[j].Bank && string.Compare(left[i].Address, right[j].Address) < 0))
+                {
+                    result.Add(left[i]);
+                    i++;
+                }
+                else
+                {
+                    result.Add(right[j]);
+                    j++;
+                }
+            }
+
+            while (i < left.Count)
             {
                 result.Add(left[i]);
                 i++;
             }
-            else
+
+            while (j < right.Count)
             {
                 result.Add(right[j]);
                 j++;
             }
-        }
 
-        while (i < left.Count)
-        {
-            result.Add(left[i]);
-            i++;
+            return result;
         }
-
-        while (j < right.Count)
-        {
-            result.Add(right[j]);
-            j++;
-        }
-
-        return result;
     }
 }
